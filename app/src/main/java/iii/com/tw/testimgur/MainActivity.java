@@ -3,12 +3,14 @@ package iii.com.tw.testimgur;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Base64;
@@ -29,13 +31,28 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.R.attr.bitmap;
+import static android.R.attr.permission;
+import static android.icu.lang.UCharacter.GraphemeClusterBreak.T;
+import static iii.com.tw.testimgur.R.id.mTextEditText;
+
 public class MainActivity extends AppCompatActivity {
     private final int REQUEST_PICK_IMAGE = 1;
+    private int REQUEST_READ_STORAGE = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            //未取得權限，向使用者要求允許權限
+            ActivityCompat.requestPermissions( this,
+                    new String[]{READ_EXTERNAL_STORAGE},
+                    REQUEST_READ_STORAGE );
+        }
+
         init();
 
 
@@ -55,8 +72,8 @@ public class MainActivity extends AppCompatActivity {
     private void imgurUpload(final String image){ //插入圖片
         //String urlString = "https://imgur-apiv3.p.mashape.com/3/image/";
         String urlString = "https://imgur-apiv3.p.mashape.com/3/image/";
-        String mashapeKey = "MaXLzROxvOmshVYRZbRxcLZL3s0ip1bnE2Kjsn8tf3B5bKRyig"; //設定自己的 Mashape Key
-        String clientId = "d8371f0a27e5085"; //設定自己的 Clinet ID
+        String mashapeKey = ""; //設定自己的 Mashape Key
+        String clientId = ""; //設定自己的 Clinet ID
         String titleString = ""; //設定圖片的標題
         showLoadingDialog();
 
@@ -130,6 +147,8 @@ public class MainActivity extends AppCompatActivity {
 
             switch(requestCode){
                 case REQUEST_PICK_IMAGE:
+
+
                     getSelectImage(data); //處理選取圖片的程式 寫在後面
                     break;
             }
@@ -159,7 +178,12 @@ public class MainActivity extends AppCompatActivity {
         cursor.close();
         //Log.d("editor","image:"+imagePath);
 
+
+
+
+        Toast.makeText(MainActivity.this,imagePath,Toast.LENGTH_LONG).show();
         //使用圖檔路徑產生調整過大小的Bitmap
+
         Bitmap bitmap = getResizedBitmap(imagePath); //程式寫在後面
 
         //將 Bitmap 轉為 base64 字串
@@ -172,12 +196,16 @@ public class MainActivity extends AppCompatActivity {
         //將圖檔上傳至 Imgur，將取得的圖檔網址插入文字輸入框
         //imgurUpload(imageBase64); //程式寫在後面
         Toast.makeText(MainActivity.this,imageBase64,Toast.LENGTH_SHORT).show();
+
     }
+
+
     private Bitmap getResizedBitmap(String imagePath) {
         // 取得原始圖檔的bitmap與寬高
         BitmapFactory.Options options = new BitmapFactory.Options();
         Bitmap bitmap = BitmapFactory.decodeFile(imagePath, options);
         int width = options.outWidth, height = options.outHeight;
+
 
         // 將圖檔等比例縮小至寬度為1024
         final int MAX_WIDTH = 1024;
@@ -191,8 +219,10 @@ public class MainActivity extends AppCompatActivity {
         matrix.postScale(resize, resize); // 設定寬高的縮放比例
 
         // 產生縮小後的圖
-        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true);
+        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0, 100, 100, matrix, true);
         return resizedBitmap;
+
+
     }
 
 
